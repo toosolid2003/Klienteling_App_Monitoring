@@ -1,0 +1,2 @@
+Produire un output plus directement utilisable
+Enregistrer l’historique des résultats pour construire une courbe temporelle
