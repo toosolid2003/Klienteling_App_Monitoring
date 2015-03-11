@@ -1,11 +1,36 @@
 import numpy as np
 import pandas as pd
+import pygal
+import pickle
+
+
+
+#Fonctions
+def dataViz(resultats, nom):
+    '''Creation de graph'''
+
+    #Passage des résultats sous forme de liste
+    listeResultats = []
+    listeLabels = []
+
+    for cle in resultats.keys():
+        listeResultats.append(resultats[cle])
+        listeLabels.append(cle)
+
+    #Création d'un objet graphique
+    chart = pygal.Line(title=nom, margin=50)
+    chart.add('Usage', listeResultats)
+    chart.x_labels = listeLabels
+    chart.render_to_file('line_chart.svg')
+
+
+
 
 #Création du dataframe
 df = pd.read_excel("/Users/thibaut.segura/Desktop/Raw Data.xlsx")
 
 
-#Formattage
+#Formatage
 #####################################################################
 
 #Conversion des entrées de LOGIN_ID en intégrale, quand c'est possible
@@ -22,7 +47,9 @@ df["LOGIN_ID"] = df.LOGIN_ID.apply(lambda x: formatting(x))
 #Filtrage des données de LOGIN_ID: on ne retient que les Sales Associates, parce qu'ils sont au format 'int'
 SaRecordings = df[df["LOGIN_ID"].apply(lambda x: type(x) == int)]
 
-
+#Conversion du champ START_TS au format datetime, avec création d'une nouvelle colonne "dateTime"
+nbLogins = df[df["API_ACTION"] == "Login"]
+SaRecordings["dateTime"] = pd.to_datetime(nbLogins["START_TS"])
 
 #Calculs    
 ####################################################################
@@ -49,6 +76,7 @@ ratioManualSku = r['getInvSku_manual'] / ItemSearchTotal
 ratioSkuPicture = r['getInvSku_picture'] / ItemSearchTotal
 
 
+
 #Output
 #####################################################################
 print('Nombre d\' utilisateurs uniques connectés: ', nbUsers)
@@ -57,6 +85,7 @@ print("Customer Search: ", ratioCustomerSearch, "\n", "Item Search: ", ratioItem
 print('Manual Sku: ', ratioManualSku)
 print('SKU with pic: ', ratioSkuPicture)
 
+#Stockage historique des résultats
 
 
 
