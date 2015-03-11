@@ -5,26 +5,6 @@ import pickle
 
 
 
-#Fonctions
-def dataViz(resultats, nom):
-    '''Creation de graph'''
-
-    #Passage des résultats sous forme de liste
-    listeResultats = []
-    listeLabels = []
-
-    for cle in resultats.keys():
-        listeResultats.append(resultats[cle])
-        listeLabels.append(cle)
-
-    #Création d'un objet graphique
-    chart = pygal.Line(title=nom, margin=50)
-    chart.add('Usage', listeResultats)
-    chart.x_labels = listeLabels
-    chart.render_to_file('line_chart.svg')
-
-
-
 
 #Création du dataframe
 df = pd.read_excel("/Users/thibaut.segura/Desktop/Raw Data.xlsx")
@@ -33,23 +13,17 @@ df = pd.read_excel("/Users/thibaut.segura/Desktop/Raw Data.xlsx")
 #Formatage
 #####################################################################
 
-#Conversion des entrées de LOGIN_ID en intégrale, quand c'est possible
-def formatting(entree):
-    try:
-        entree = int(entree)
-    except:
-        pass
-    
-    return entree
+#Conversion des entrées de LOGIN_ID en intégrale. Sinon, renvoi d'une valeur nulle
+df["LOGIN_ID"] = df["LOGIN_ID"].astype('str').convert_objects(convert_numeric=True)
+SaRecordings = df[~df['LOGIN_ID'].isnull()]
 
-df["LOGIN_ID"] = df.LOGIN_ID.apply(lambda x: formatting(x))
 
-#Filtrage des données de LOGIN_ID: on ne retient que les Sales Associates, parce qu'ils sont au format 'int'
-SaRecordings = df[df["LOGIN_ID"].apply(lambda x: type(x) == int)]
 
 #Conversion du champ START_TS au format datetime, avec création d'une nouvelle colonne "dateTime"
-nbLogins = df[df["API_ACTION"] == "Login"]
+nbLogins = SaRecordings[SaRecordings["API_ACTION"] == "Login"]
 SaRecordings["dateTime"] = pd.to_datetime(nbLogins["START_TS"])
+
+
 
 #Calculs    
 ####################################################################
@@ -114,3 +88,22 @@ print('SKU with pic: ', ratioSkuPicture)
 #    except ValueError:
 #        "Mauvaise valeur"
 #    indX += 1
+
+
+#Fonctions
+def dataViz(resultats, nom):
+    '''Creation de graph'''
+
+    #Passage des résultats sous forme de liste
+    listeResultats = []
+    listeLabels = []
+
+    for cle in resultats.keys():
+        listeResultats.append(resultats[cle])
+        listeLabels.append(cle)
+
+    #Création d'un objet graphique
+    chart = pygal.Line(title=nom, margin=50)
+    chart.add('Usage', listeResultats)
+    chart.x_labels = listeLabels
+    chart.render_to_file('line_chart.svg')
