@@ -1,2 +1,3 @@
 Produire un output plus directement utilisable
-Enregistrer l’historique des résultats pour construire une courbe temporelle
+Enregistrer l’historique des résultats pour construire une courbe temporelle sous forme de df.
+Trouver un moyen de plotter directement un dataframe

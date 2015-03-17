@@ -6,18 +6,18 @@ import pickle
 
 
 
+#1. Formatage des nouvelles données
+#####################################################################
+
 #Création du dataframe
 df = pd.read_excel("/Users/thibaut.segura/Desktop/Raw Data.xlsx")
-
-
-#Formatage
-#####################################################################
 
 #Conversion des entrées de LOGIN_ID en intégrale. Sinon, renvoi d'une valeur nulle
 df["LOGIN_ID"] = df["LOGIN_ID"].astype('str').convert_objects(convert_numeric=True)
 SaRecordings = df[~df['LOGIN_ID'].isnull()]
 
-
+#Suppression des colonnes BEFOREWS_TS, END_TS, AFTERWS_TS, TRANSACTION_ID, LOG_INFO et Cus Vs Ite
+del SaRecordings["BEFOREWS_TS", "END_TS", "AFTERWS_TS", 'TRANSACTION_ID', "LOG_INFO", "Cus Vs Ite"]
 
 #Conversion du champ START_TS au format datetime, avec création d'une nouvelle colonne "dateTime"
 nbLogins = SaRecordings[SaRecordings["API_ACTION"] == "Login"]
@@ -25,9 +25,11 @@ SaRecordings["dateTime"] = pd.to_datetime(nbLogins["START_TS"])
 
 
 
-#Calculs    
+#2. Calculs    
 ####################################################################
-#Nb de transactions réussies
+#Nb de transactions réussies: si on a un employee ID, alors la transaction est réussie. MMH, à revoir
+#A faire: Filtrer les transactions de logins, les compter puis voir lesquelles sont KO avant de faire le ratio
+
 transacOk = SaRecordings["EMPLOYEE_ID"].value_counts().sum()
 transacTotal = SaRecordings["LOGIN_ID"].value_counts().sum()
 tauxSucces = transacOk / transacTotal
@@ -59,8 +61,21 @@ print("Customer Search: ", ratioCustomerSearch, "\n", "Item Search: ", ratioItem
 print('Manual Sku: ', ratioManualSku)
 print('SKU with pic: ', ratioSkuPicture)
 
-#Stockage historique des résultats
+#3. Ajout des résultats dans un data frame "Results"
+#####################################################################
+                   
+                   
+#4. Prodcutions des graphiques
+#####################################################################
 
+
+#5. Ajout des nouvelles données dans un data frame global 'Raw Data'
+#####################################################################
+                   
+#6. Enregistrement des deux data frames
+#####################################################################
+                   
+                   
 
 
 #Random stuff
