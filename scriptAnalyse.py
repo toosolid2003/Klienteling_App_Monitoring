@@ -32,17 +32,14 @@ cSearch = cSearch.sort_index()
 userCusto = cSearch.apply(lambda x: x/nbUniqueUsers)
 userItem = iSearch.apply(lambda x: x/nbUniqueUsers)
 
+print("Customer Searches per user:\n", userCusto) 
+print("Item Searches per user:\n", userItem)
+
 ## Sortie graphique
-get_ipython().magic('matplotlib osx')
-userItem.plot()
-userCusto.plot(title="Average feature use per user")
+
 
 
 ## Classement des utilisateurs les plus actifs
-rankUsers = SaRecordings.query('API_ACTION == ["getInvStyle","getInvSku_manual","getInvSku_manual","getInvSku_picture","customerSearch"]')
 
-rankUsers['API_ACTION'].value_counts()
-rankUsers[['EMPLOYEE_ID','API_ACTION']].head()
-t = rankUsers[['EMPLOYEE_ID','API_ACTION']]
 
 
