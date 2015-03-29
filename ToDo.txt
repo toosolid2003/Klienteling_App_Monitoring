@@ -1,3 +1,9 @@
-Produire un output plus directement utilisable
-Enregistrer l’historique des résultats pour construire une courbe temporelle sous forme de df.
-Trouver un moyen de plotter directement un dataframe
+Produire un cdv en output. 
+	Lignes: 1 enregistrement par jour
+	Colonnes: 
+		nb total customer search, 
+		nb total item search, 
+		nb total d’utilisateurs actifs,
+		nb total d’utilisateurs potentiels, 
+		nb moyen de customer search par user, 
+		nb moyen de item search par user.
