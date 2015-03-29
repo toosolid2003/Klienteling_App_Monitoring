@@ -28,40 +28,67 @@ def getSAonly(df):
     return SaRecordings
 
 
-def uniqueVisitors():
-    nbUniqueUsers = len(SaRecordings["LOGIN_ID"].unique())
+def visitorsDay(SaRecordings):
+    '''Input: Filtered dataframe - SaRecordings - with only recordings from sales associates.
+    Output: a Series with unique users, who managed to log in at least once during the day'''
+    
+    #Filter: only select recordings with a successful login by an SA.
+    usersJour = SaRecordings[(SaRecordings["API_ACTION"]=="Login") & (SaRecordings["RESULT_STATUS"]=="OK")]
+    
+    #On isole les doublons, au cas où quelqu'un se soit connecté deux fois dans la même journée.
+    #usersJour = usersJour["LOGIN_ID"].drop_duplicates()
+    
+    #Grouping results by day
+    usersJour = usersJour[["ORGANIZATION_ID","LOGIN_ID","DAY"]].groupby("DAY")
+    
+    #Computing and returning the number of recordings per day.
+    return usersJour.size()
 
 
-def ItemSearch(df):
-    '''Takes a dataframe as input and returns a Series of Item Searches, sorted by dates.'''
+def searchBrand(df, req):
+    '''Computes the number of API ACTIONS performed by Sales Associates, brand by brand. 
+    Input: 
+        - df = a dataframe with only the recordings from Sales Associates
+        - req = a list of API ACTION to count per day and per brand
     
-    itemSearch = df.query('API_ACTION == ["getInvStyle","getInvSku_manual","getInvSku_manual","getInvSku_picture"]')
-    iSearch = itemSearch["DAY"].value_counts()
-    iSearch = iSearch.sort_index()
+    Output: a dataframe with the number of searches, split by brands.'''
     
-    return iSearch
-
-def itemSearchBrand(df):
-    '''Input: a dataframe with only the recordings from Sales Associates
-    Output: a dataframe with the split of item searches by brand.'''
+    #Prepare request
+    start = "API_ACTION==['"
+    middle = "','".join(req)
+    end = "']"
     
-    #Select only the API ACTIONS for item search
-    items = df.query('API_ACTION == ["getInvStyle","getInvSku_manual","getInvSku_manual","getInvSku_picture"]')
+    request = start+middle+end
+    
+    #Select only the API ACTIONS for the search parameters
+    items = df.query(request)
     iGroup = items.groupby("DAY")
+    
     
     #Group & count the values per brands. Unstack them to have a plottable dataframe.
     searchBrands = iGroup["ORG NAME"].value_counts().unstack()
+    searchBrands = searchBrands.fillna(0)
     
-    return isearchBrands
+    #Add a "Total" column to the dataframe
+    indx = searchBrands.columns
+    
+    searchBrands["Total"] = 0
+    for elt in indx:
+        searchBrands["Total"] += searchBrands[elt]
+    
+    return searchBrands
 
-def CustomerSearch(df):
-    '''Takes a dataframe as input and returns a Series of Customer Searches, sorted by dates.'''
+def totalCalls(SaRecordings):
+    '''Overall number of calls to the API, per brand. 
     
-    df2 = df[df["API_ACTION"] == "customerSearch"]
-    cSearch = df2["DAY"].value_counts()
-    cSearch = cSearch.sort_index()
+    Input:  dataframe with only recordings from SAs.
+    Output: group object.'''
     
-    return cSearch
+    group = sa[["API_ACTION","ORG NAME"]].groupby("ORG NAME")
+    totalCalls = group.size()
+    
+    return totalCalls
+
 
 def usageCsv(iSearch, cSearch):
     '''Takes two Series as input and outputs a csv file with number of customer and item searches per day'''
@@ -70,8 +97,6 @@ def usageCsv(iSearch, cSearch):
     plotData2 = pd.DataFrame(data=cSearch, columns=["CustomerSearch"])
     plotData = pd.merge(plotData1, plotData2, left_index=True, right_index=True)
     plotData.to_csv("usage.csv", headers=True)
-
-## Nb of average users per day
 
 ## Nb of requests per user:
 def averages(search):
@@ -92,23 +117,6 @@ def averages(search):
     
     return result
 
-def visitorsDay(SaRecodings):
-    '''Input: Filtered dataframe - SaRecordings - with only recordings from sales associates.
-    Output: a Series with unique users, who managed to log in at least once during the day'''
-    
-    #Filtrage: on sélectionne les entrées qui témoignent qu'un SA s'est connecté avec succès.
-    usersJour = SaRecordings[(SaRecordings["API_ACTION"]=="Login") & (SaRecordings["RESULT_STATUS"]=="OK")]
-    
-    #On isole les doublons, au cas où quelqu'un se soit connecté deux fois dans la même journée.
-    #usersJour = usersJour["LOGIN_ID"].drop_duplicates()
-    
-    #On groupe les entrées par jour.
-    usersJour = usersJour[["ORGANIZATION_ID","LOGIN_ID","DAY"]].groupby("DAY")
-    
-    #Calucl du nombre d'entrée - de "successful logins" - par jour.
-    return usersJour.size()
-
-
     
     ######################################################################################################
 ## Other KPIs
@@ -117,7 +125,7 @@ def mostActiveUser(SaRecording):
     '''Input: dataframe (SaRecordings)
     Output: classement des utilisateurs ayant généré le plus de requêtes.'''
     
-    use = SaRecordings[["LOGIN_ID","API_ACTION"]]
+    use = SaRecording[["LOGIN_ID","API_ACTION"]]
 
     usergroup = use.groupby('LOGIN_ID')
 
@@ -129,9 +137,31 @@ def mostActiveBrands(SaRecording):
     '''Input: dataframe (SaRecordings)
     Output: classement des marques ayant généré le plus de requêtes.'''
     
-    brandUse = SaRecordings[["ORGANIZATION_ID","API_ACTION", "ORG NAME"]]
+    brandUse = SaRecording[["ORGANIZATION_ID","API_ACTION", "ORG NAME"]]
 
     brandUseGroup = brandUse.groupby("ORG NAME")
 
     return brandUseGroup.size()
+
+#old functions
+######################################################################################################
+
+def CustomerSearch(df):
+    '''Takes a dataframe as input and returns a Series of Customer Searches, sorted by dates.'''
+    
+    df2 = df[df["API_ACTION"] == "customerSearch"]
+    cSearch = df2["DAY"].value_counts()
+    cSearch = cSearch.sort_index()
+    
+    return cSearch
+
+
+def ItemSearch(df):
+    '''Takes a dataframe as input and returns a Series of Item Searches, sorted by dates.'''
+    
+    itemSearch = df.query('API_ACTION == ["getInvStyle","getInvSku_manual","getInvSku_picture"]')
+    iSearch = itemSearch["DAY"].value_counts()
+    iSearch = iSearch.sort_index()
+    
+    return iSearch
 
